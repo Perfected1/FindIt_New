@@ -1,0 +1,15 @@
+# Dependencies and build output
+node_modules/
+dist/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets and local settings: never commit these
+.env
+.env.local
+.env.*.local
+
+# The database holds real emails and private review links
+*.db
