@@ -1,0 +1,42 @@
+VITE CONFIGURATION ISSUE & SOLUTION
+=====================================
+
+1. The Problem
+--------------
+When running locally, the frontend displayed dummy/sample items (e.g. "Black Leather Wallet", "Brass Key", etc.) and showed the notice "Sample listings · API not connected", even while the Flask backend was running.
+
+2. Root Cause (The Config Issue)
+--------------------------------
+The issue came down to how the Vite development server handled requests to `/api/items`:
+
+- In `src/App.jsx`, API requests were made to relative paths like `/api/items` (because `VITE_API_BASE_URL` was not defined in the local environment).
+- The frontend was served by Vite on `http://localhost:5173`.
+- The Flask backend was running separately on `http://127.0.0.1:5000`.
+- In `vite.config.js`, there was no proxy configuration defined.
+- As a result, Vite treated `/api/items` as an internal SPA (Single Page Application) frontend route and served the HTML fallback (`index.html`) with a 200 OK status instead of passing it to Flask.
+- When the React frontend attempted to parse the response as JSON (`response.json()`), the HTML string caused a JSON parsing syntax error.
+- This error triggered the `.catch()` block in `App.jsx`, which defaulted the application to demo mode (`dataSource: 'demo'`) and loaded the 9 hardcoded sample listings.
+
+3. The Solution
+---------------
+In `vite.config.js`, a development server proxy was added to route all `/api` traffic to Flask:
+
+```javascript
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+      },
+    },
+  },
+})
+```
+
+4. The Result
+-------------
+- Any request made by the browser to `/api/*` is now automatically intercepted by Vite and forwarded to the Flask server on port 5000.
+- The React application receives valid JSON responses from the SQLite database.
+- Live reported items are displayed, and new reports/claims connect directly to the backend.

@@ -28,6 +28,13 @@ from email.message import EmailMessage
 from flask import (Flask, abort, g, jsonify, redirect, render_template_string,
                    request, url_for)
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+    load_dotenv()
+except ImportError:
+    pass
+
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
 
